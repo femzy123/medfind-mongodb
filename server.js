@@ -14,9 +14,9 @@ app.get("/", (req, res) => {
   res.send("Server works fine")
 })
 
-// app.get("/ping", (req, res) => {
-//   res.send("Pong");
-// });
+app.get("/ping", (req, res) => {
+  res.send("Pong");
+});
 
 app.listen(port, () => {
   console.log("Medfind server running on port " + port);
