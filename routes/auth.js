@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { PrismaClient, Prisma } = require("@prisma/client");
 const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
 
 const prisma = new PrismaClient();
 
@@ -9,10 +10,13 @@ router.post("/register", async (req, res) => {
   const newUser = {
     name: req.body.name,
     email: req.body.email,
-    password: req.body.password,
+    password: CryptoJS.AES.encrypt(
+      req.body.password,
+      process.env.SECRET_KEY
+    ).toString(),
     phone: req.body.phone,
     role: req.body.role,
-  }
+  };
   try {
     const user = await prisma.user.create({
       data: newUser
@@ -32,5 +36,33 @@ router.post("/register", async (req, res) => {
   }
 
 })
+
+router.post("/login", async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: req.body.email,
+      },
+    });
+    !user && res.status(401).json({ message: "Wrong email or password" });
+
+    const { password, ...info } = user;
+
+    const decryptedPassword = CryptoJS.AES.decrypt(
+      password,
+      process.env.SECRET_KEY
+    ).toString(CryptoJS.enc.Utf8);
+
+    decryptedPassword !== req.body.password &&
+      res.status(401).json({ message: "Wrong email or password" });
+
+    const accessToken = jwt.sign({ id: info.id }, process.env.SECRET_KEY, {
+      expiresIn: "5d",
+    });
+    res.status(200).json({ ...info, accessToken });
+  } catch (err) {
+    res.status(500).json("Something went wrong!");
+  }
+});
 
 module.exports = router;
