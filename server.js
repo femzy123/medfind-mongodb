@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv");
 const authRoute = require("./routes/auth");
+const userRoute = require("./routes/profile");
 
 app.use(cors());
 dotenv.config();
@@ -20,6 +21,8 @@ app.get("/ping", (req, res) => {
 });
 
 app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
+
 
 app.listen(port, () => {
   console.log("Medfind server running on port " + port);
